@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+        
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+          http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+          http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+          http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+          http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+" 
+>
+    <context:component-scan base-package="security1" />
+    <context:annotation-config />
+    <mvc:annotation-driven />
+    <security:http>
+        <security:form-login />
+        <security:logout />
+        <security:intercept-url pattern="/user/*" access="isAuthenticated()"></security:intercept-url>
+    </security:http>
+    <security:user-service id="userService">
+        <security:user name="tom" authorities="admin,user"  password="123456" />
+    </security:user-service>
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="userService" />
+    </security:authentication-manager>
+ 
+    <jpa:repositories base-package="security1" transaction-manager-ref="txMgr" entity-manager-factory-ref="emf"  />    
+    <tx:annotation-driven transaction-manager="txMgr" />
+    <bean id="ds" class="org.apache.commons.dbcp2.BasicDataSource" p:url="jdbc:mysql://localhost:3306/user?useUnicode=true&amp;characterEncoding=utf8" p:username="root" p:password="123456" p:driverClassName="com.mysql.jdbc.Driver" destroy-method="close" />    
+    <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" >
+        <property name="dataSource" ref="ds" />
+        <property name="packagesToScan" value="security1" />
+        <property name="persistenceProvider">
+            <bean class="org.hibernate.jpa.HibernatePersistenceProvider" />
+        </property>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="generateDdl" value="false" />
+            </bean>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+                <prop key="hibernate.hbm2ddl.auto">create</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.format_sql">false</prop>
+                <prop key="hibernate.use_sql_comments">false</prop>
+                <prop key="hibernate.connection.isolation">2</prop>
+                <prop key="javax.persistence.validation.mode">none</prop>
+            </props>
+        </property>  
+    </bean>
+    <bean id="txMgr" class="org.springframework.orm.jpa.JpaTransactionManager" p:entityManagerFactory-ref="emf" />
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" p:prefix="/WEB-INF/" p:suffix=".jsp" />
+
+</beans>
